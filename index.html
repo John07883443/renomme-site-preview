@@ -353,6 +353,16 @@ section.dark .sec-head p{color:var(--hero-muted)}
 .nw p{font-size:14.5px;color:var(--ink-2);margin-top:6px}
 .nw .tag{align-self:start}
 .nw:hover h3{color:var(--accent)}
+.nw.has-img{grid-template-columns:200px 120px minmax(0,1fr) auto;align-items:start}
+.nw-img{width:200px;aspect-ratio:3 / 2;object-fit:cover;display:block;background:var(--bg-2)}
+.nw-hero{width:100%;max-width:960px;aspect-ratio:3 / 2;object-fit:cover;display:block;margin-bottom:32px;background:var(--bg-2)}
+@media (max-width:760px){
+  .nw.has-img{grid-template-columns:minmax(0,1fr) auto;gap:8px 16px}
+  .nw.has-img .nw-img{grid-column:1 / -1;width:100%}
+  .nw.has-img time{grid-row:2;grid-column:1}
+  .nw.has-img .tag{grid-row:2;grid-column:2}
+  .nw.has-img > div{grid-row:3;grid-column:1 / -1}
+}
 @media (max-width:700px){.nw{grid-template-columns:1fr}}
 
 /* contacts */
@@ -1200,9 +1210,15 @@ var CASES=[
  {dir:'dp',t:'Пример кейса: контроль СИЗ на производстве с помощью Ники',who:'Промышленное предприятие',task:'Сократить нарушения техники безопасности в цехах.',sol:'Подключение Ники к существующим камерам, серверы инференса на площадке.',res:'Нарушения фиксируются автоматически, уведомления уходят мастеру смены.',brands:['huawei'],sv:['integration'],prod:'nika'}
 ];
 var NEWS=[
- {id:'1',date:'2026-09-24',cat:'Компания',t:'Пример новости: запуск обновлённого сайта Renomme Group',d:'Каталог ИТ-инфраструктуры и оборудования связи, страницы брендов, конфигураторы и цифровые продукты.'},
- {id:'2',date:'2026-09-10',cat:'Продукты',t:'Пример новости: обновление цифрового продукта',d:'Шаблон новости о продукте: что появилось и для кого.'},
- {id:'3',date:'2026-08-27',cat:'Поставки',t:'Пример новости: новая линейка оборудования в каталоге',d:'Шаблон новости о расширении каталога или партнёрском статусе.'}
+ /* ПРИМЕРЫ-ШАБЛОНЫ (кроме запуска сайта и партнёрства с Huawei): события условные, заменить реальными новостями перед запуском */
+ {id:'1',date:'2026-09-24',cat:'Компания',t:'Запущен обновлённый сайт Renomme Group',d:'Каталог ИТ-инфраструктуры и оборудования связи, страницы брендов, конфигураторы и цифровые продукты — в одном месте.',img:'site'},
+ {id:'2',date:'2026-09-15',cat:'Компания',t:'Реномме Групп — партнёр Huawei',d:'Серверы TaiShan, AI-платформы Atlas, СХД OceanStor и сетевое оборудование Huawei — поставка с документами и сопровождением.',img:'partner'},
+ {id:'3',date:'2026-09-08',cat:'Поставки',t:'Пример: GPU-кластер для исследовательского центра',d:'Шаблон новости о проекте: вычислительные узлы, сеть кластера и жидкостное охлаждение — от поставки до ввода в эксплуатацию.',img:'gpu'},
+ {id:'4',date:'2026-08-27',cat:'Поставки',t:'Пример: крупная поставка серверного оборудования',d:'Шаблон новости о поставке: объём, сроки, белая таможня и полный пакет документов.',img:'logistics'},
+ {id:'5',date:'2026-08-14',cat:'События',t:'Пример: Renomme Group на отраслевой выставке',d:'Шаблон новости о выставке: стенд, демонстрации оборудования, встречи с партнёрами.',img:'expo'},
+ {id:'6',date:'2026-07-30',cat:'Поставки',t:'Пример: спутниковая станция для удалённого объекта',d:'Шаблон новости о направлении «Связь»: антенна, RF-тракт и модемы для объекта вне зоны наземных каналов.',img:'satellite'},
+ {id:'7',date:'2026-07-16',cat:'Продукты',t:'Пример: «Ника» в пилоте на строительном объекте',d:'Шаблон новости о цифровом продукте: машинное зрение для строительного контроля, что показал пилот.',img:'nika'},
+ {id:'8',date:'2026-07-02',cat:'События',t:'Пример: обучение команды заказчика',d:'Шаблон новости об обучающей программе: администрирование поставленной инфраструктуры и работа с ИИ-сервисами.',img:'training'}
 ];
 var TEAM=[['Генеральный директор','Стратегия и ключевые заказчики'],['Технический директор','Архитектура решений и проверка поставщиков'],['Руководитель направления ИТ-инфраструктуры','Серверы, СХД, сети, ИБ'],['Руководитель направления «Связь»','Спутниковое оборудование'],['Руководитель цифровых продуктов','Ника, Медиамашина, Тина, RG Router'],['Руководитель ВЭД и логистики','Маршруты, таможня, сертификация']];
 
@@ -1574,11 +1590,12 @@ function renderCases(d){
   }).join('');
 }
 
-function newsList(list){return '<div class="news">'+list.map(function(n){return '<a class="nw" href="#n-'+n.id+'"><time datetime="'+n.date+'">'+fmtDate(n.date)+'</time><div><h3>'+esc(n.t)+'</h3><p>'+esc(n.d)+'</p></div><span class="tag">'+n.cat+'</span></a>'}).join('')+'</div>'}
+function newsImg(n){return n.img?'img/news/'+n.img+'.webp':''}
+function newsList(list){return '<div class="news">'+list.map(function(n){var im=newsImg(n);return '<a class="nw'+(im?' has-img':'')+'" href="#n-'+n.id+'">'+(im?imgTag(im,n.t,'nw-img'):'')+'<time datetime="'+n.date+'">'+fmtDate(n.date)+'</time><div><h3>'+esc(n.t)+'</h3><p>'+esc(n.d)+'</p></div><span class="tag">'+n.cat+'</span></a>'}).join('')+'</div>'}
 P.news=function(){return head({crumbs:[['Главная','home'],['Новости']],h1:'Новости',lede:'Новости компании, поставок и цифровых продуктов.',todo:'Новости ниже — шаблоны, заменить реальными'})+
  '<section class="block" style="padding-top:40px"><div class="wrap"><div class="chips" id="newsF" style="margin-bottom:24px"><button type="button" class="chip" data-c="" aria-pressed="true">Все</button><button type="button" class="chip" data-c="Компания" aria-pressed="false">Компания</button><button type="button" class="chip" data-c="Поставки" aria-pressed="false">Поставки</button><button type="button" class="chip" data-c="Продукты" aria-pressed="false">Продукты</button><button type="button" class="chip" data-c="События" aria-pressed="false">События</button></div><div id="newsBox">'+newsList(NEWS)+'</div></div></section>';};
 function newsPage(n){return head({crumbs:[['Главная','home'],['Новости','news'],[fmtDate(n.date)]],kicker:n.cat+' · '+fmtDate(n.date),h1:esc(n.t),lede:esc(n.d)})+
- '<section class="block" style="padding-top:40px"><div class="wrap">'+todoBlock('Шаблон новости','Текст · фото · связанные бренды, продукты или услуги · ссылка на источник.')+'<div style="margin-top:32px"><a class="more" href="#news">← Все новости</a></div></div></section>';}
+ '<section class="block" style="padding-top:40px"><div class="wrap">'+(newsImg(n)?'<img class="nw-hero" src="'+newsImg(n)+'" alt="'+esc(n.t)+'" loading="lazy">':'')+todoBlock('Шаблон новости','Текст · фото · связанные бренды, продукты или услуги · ссылка на источник.')+'<div style="margin-top:32px"><a class="more" href="#news">← Все новости</a></div></div></section>';}
 
 P.about=function(){return head({crumbs:[['Главная','home'],['Компания']],h1:'Renomme Group',lede:'Поставщик ИТ-инфраструктуры и оборудования связи, разработчик цифровых продуктов на базе ИИ. Открываем доступ к международным рынкам оборудования, ПО и ИИ — легально, с документами и белой таможней.'})+
  '<section class="block"><div class="wrap split"><div>'+secHead('Принципы','Почему нам доверяют','')+
