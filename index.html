@@ -525,7 +525,8 @@ form.req h3{font-size:20px}
 .intro-static canvas{position:relative;height:56vh}
 .intro-static .intro-shade,.intro-static .intro-bar{display:none}
 .intro-static .intro-caps{position:relative;padding-block:48px}
-.intro-static .intro-caps .wrap{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:32px}
+.intro-static .intro-caps .wrap{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:32px}
+.intro-static .intro-cap h2{font-size:clamp(20px,1.7vw,24px);overflow-wrap:break-word}
 .intro-static .intro-cap{grid-area:auto;opacity:1;transform:none}
 
 /* footer */
@@ -1307,13 +1308,13 @@ var P={};
 
 /* =====================================================================
    ИНТРО «от стойки до города»: непрерывное видео (Seedance) нарезано на кадры img/intro/fNNN.webp,
-   кадр выбирается по прокрутке. Сейчас стоят кадры ТЕСТОВОГО рендера 480p — финальный 720p/1080p после согласования.
+   кадр выбирается по прокрутке. Финальный рендер 1080p (24.09.2026), кадры 1600 px WebP, 12 кадров/с, ~2,4 МБ; на мобильных — каждый второй.
    ===================================================================== */
 var INTRO={n:121,src:function(i){return 'img/intro/f'+('00'+i).slice(-3)+'.webp'},frames:[],caps:[
  ['ИТ-инфраструктура','Серверы, GPU-платформы и СХД','Поставляем от вендоров напрямую: белая таможня, полный пакет документов, гарантия.',0],
  ['Сети и безопасность','Связываем площадки и защищаем периметр','Сети ЦОД и филиалов, межсетевые экраны, защищённый удалённый доступ.',.3],
  ['Связь','Спутниковое оборудование для любых объектов','RF-тракт, антенны, модемы и телепорты — там, где нет наземных каналов.',.5],
- ['Цифровые продукты','ИИ-сервисы на этой инфраструктуре','Машинное зрение, маркетинг, тендеры и доступ к нейросетям — по подписке.',.74]
+ ['Цифровые продукты','ИИ-сервисы на этой инфраструктуре','Машинное зрение, маркетинг, тендеры и доступ к нейросетям — по подписке.',.8]
 ]};
 function introHtml(){
   return '<section class="intro" id="intro" aria-label="Что мы делаем"><div class="intro-stick"><canvas id="introCv" aria-hidden="true"></canvas><div class="intro-shade"></div>'+
@@ -1343,7 +1344,7 @@ function introInit(){
     bar.style.transform='scaleX('+p+')';
     var k=0;INTRO.caps.forEach(function(c,j){if(p>=c[3])k=j});caps.forEach(function(el,j){el.classList.toggle('on',j===k)});
   }
-  if(reduce){sec.classList.add('intro-static');want=Math.round(INTRO.n*.55);load(want);size();window.addEventListener('resize',size);return}
+  if(reduce){sec.classList.add('intro-static');want=Math.round(INTRO.n*.95);load(want);size();window.addEventListener('resize',size);return}
   want=1; load(1); size();
   /* остальные кадры — только когда секция рядом с экраном, чтобы не мешать первой загрузке */
   var io=new IntersectionObserver(function(es){if(!es[0].isIntersecting)return;io.disconnect();
