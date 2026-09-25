@@ -58,6 +58,8 @@ d.classList.add('js');})();
   --wrap:1280px;
   /* второй акцент «Кобальт» (разбор Миранды, п. 9.5): только сигнал — текущее значение, активный узел, статус-точка. Не кнопки, не заголовки, не заливки */
   --signal:#2F6BFF; --signal-soft:#E8EFFF; --signal-hero:#5B8CFF; --focus:#2F6BFF;
+  /* графики «Пульса рынка» (Миранда, п. 9.6): линия, сетка, второстепенный ряд */
+  --chart-line:#344F60; --chart-grid:#E3EAEE; --chart-soft:#BFCBD2;
   --ease:cubic-bezier(.2,.7,.2,1);
 }
 @media (prefers-color-scheme: dark){
@@ -71,6 +73,7 @@ d.classList.add('js');})();
     --field:#161C20; --todo:#E2C27A; --todo-bg:#2A261B;
     --hero:#12181C; --hero-2:#1A2227; --hero-3:#212B31; --hero-line:#26333C;
     --ink:#F2F6F8; --signal:#5B8CFF; --signal-soft:#1D2A4A; --focus:#AEC8D7;
+    --chart-line:#ADB8BF; --chart-grid:#2A3842; --chart-soft:#44545F;
   }
 }
 :root[data-theme="dark"]{
@@ -83,6 +86,7 @@ d.classList.add('js');})();
   --field:#161C20; --todo:#E2C27A; --todo-bg:#2A261B;
   --hero:#12181C; --hero-2:#1A2227; --hero-3:#212B31; --hero-line:#26333C;
   --ink:#F2F6F8; --signal:#5B8CFF; --signal-soft:#1D2A4A; --focus:#AEC8D7;
+    --chart-line:#ADB8BF; --chart-grid:#2A3842; --chart-soft:#44545F;
 }
 html.theme-anim body,html.theme-anim header.site,html.theme-anim section{transition:background-color .2s linear,color .2s linear}
 
@@ -745,6 +749,133 @@ header.site{view-transition-name:site-header}
 ::view-transition-new(root){animation:vt-in .18s cubic-bezier(.2,.7,.2,1) both}
 @media (prefers-reduced-motion: reduce){::view-transition-old(root),::view-transition-new(root){animation:none}}
 
+/* =====  ПУЛЬС РЫНКА (#pulse и полоса на главной). Графики — свой SVG, без библиотек и внешних запросов  ===== */
+.pulse-sec{scroll-margin-top:90px}
+.pulse-sec + .pulse-sec{border-top:1px solid var(--line)}
+.pw-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.pw-grid.one{grid-template-columns:minmax(0,1fr)}
+.pw{background:var(--bg);padding:24px 24px 20px;display:flex;flex-direction:column;min-width:0}
+.pw.wide{grid-column:1 / -1}
+.pw h3{font-size:17px;line-height:1.3;margin-top:10px}
+.pw .q{font-size:14px;color:var(--ink-2);margin-top:6px;max-width:44em}
+.pw-now{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin-top:16px}
+.pw-now b{font:500 clamp(24px,2.4vw,30px)/1 var(--display);font-variant-numeric:tabular-nums;letter-spacing:-.02em;display:inline-flex;align-items:center;gap:10px}
+.pw-now b::before{content:"";width:8px;height:8px;background:var(--signal);flex-shrink:0}
+.pw-now span{font-size:13px;color:var(--muted)}
+.pw-now .up{color:var(--ink-2);font-weight:400;font-variant-numeric:tabular-nums}
+.pw-chart{margin-top:18px;min-height:40px;position:relative}
+.pw-chart svg{display:block;width:100%;overflow:visible}
+.pw-src{margin-top:auto;padding-top:16px;font-size:12px;line-height:1.5;color:var(--muted)}
+.pw-src a{color:var(--ink-2)}
+.pw-src a:hover{color:var(--ink)}
+.pw-src .tm{display:block;margin-top:6px;font-size:11px;line-height:1.45}
+.pw-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 40px;margin-top:18px}
+@media (max-width:760px){.pw-two{grid-template-columns:minmax(0,1fr)}}
+.pw-note{font-size:12.5px;color:var(--ink-2);margin-top:12px;border-left:2px solid var(--line-strong);padding-left:10px}
+.pw-loading,.pw-err{font-size:14px;color:var(--muted);padding:12px 0}
+/* SVG-примитивы */
+.pl-grid{stroke:var(--chart-grid);stroke-width:1;shape-rendering:crispEdges}
+.pl-axis{fill:var(--muted);font:400 11px var(--sans);font-variant-numeric:tabular-nums}
+.pl-line{fill:none;stroke:var(--chart-line);stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+.pl-line.alt{stroke:var(--slate-40);stroke-dasharray:4 3}
+.pl-area{fill:var(--chart-line);opacity:.07}
+.pl-dot{fill:var(--signal)}
+.pl-val{fill:var(--signal);font:700 12px var(--sans);font-variant-numeric:tabular-nums}
+.pl-bar{fill:var(--chart-line)}
+.pl-bar2{fill:var(--chart-soft)}
+.pl-bar.now{fill:var(--signal)}
+.pl-pt{fill:var(--chart-soft);stroke:none}
+.pl-pt.on{fill:var(--chart-line)}
+.pl-pt.top{fill:var(--signal)}
+.pw-chart.drawn .pl-line{stroke-dasharray:1;animation:pl-draw .5s var(--ease) both}
+@keyframes pl-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.pl-leg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin-top:10px}
+.pl-leg i{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:-1px}
+/* горизонтальные полосы (HTML) */
+.hb{display:grid;gap:10px}
+.hb li{display:grid;grid-template-columns:minmax(0,12em) minmax(0,1fr) auto;gap:4px 12px;align-items:center;font-size:13.5px}
+.hb .l{color:var(--ink);overflow-wrap:anywhere;line-height:1.3}
+.hb .l small{display:block;color:var(--muted);font-size:11.5px}
+.hb .t{height:8px;background:var(--chart-grid);position:relative}
+.hb .t i{position:absolute;left:0;top:0;bottom:0;background:var(--chart-line);transform-origin:0 50%}
+.pw-chart.drawn .hb .t i{animation:hb-grow .5s var(--ease) both}
+@keyframes hb-grow{from{transform:scaleX(0)}}
+.hb .v{font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right;color:var(--ink)}
+.hb .v small{display:block;color:var(--muted);font-size:11.5px}
+@media (max-width:520px){.hb li{grid-template-columns:minmax(0,1fr) auto}.hb .t{grid-column:1 / -1;grid-row:2}}
+/* вендоры/фильтры */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.chips button{background:none;border:1px solid var(--line);color:var(--ink-2);font:400 12.5px var(--sans);padding:6px 10px;cursor:pointer}
+.chips button[aria-pressed="true"]{border-color:var(--ink);color:var(--ink);background:var(--bg-2)}
+/* мини-карточки компаний (SEC) */
+.cos{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:18px}
+.co{background:var(--bg);padding:14px 14px 10px}
+.co b{display:block;font:500 13.5px/1.3 var(--display)}
+.co .n{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--muted);margin-top:6px;font-variant-numeric:tabular-nums}
+.co .n{flex-wrap:wrap}
+.co .n em{font-style:normal;color:var(--signal);font-weight:700;white-space:nowrap}
+/* тройка рисков */
+.risk3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:18px}
+.risk3 li{background:var(--bg);padding:18px 16px}
+.risk3 .n{font:400 11.5px/1.2 var(--sans);letter-spacing:.1em;color:var(--muted);font-variant-numeric:tabular-nums}
+.risk3 b{display:block;font:500 15px/1.3 var(--display);margin-top:10px}
+.risk3 i{display:block;font-style:normal;font-size:12px;color:var(--muted);margin-top:2px}
+.risk3 span{display:block;font-size:13.5px;color:var(--ink-2);margin-top:8px}
+@media (max-width:760px){.risk3{grid-template-columns:1fr}}
+/* флагман-заглушка */
+.flag{border:1px solid var(--line-strong);padding:clamp(22px,3vw,36px);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px 40px;align-items:center}
+.flag h2{font-size:clamp(20px,2.2vw,28px);line-height:1.2;margin-top:12px}
+.flag p{color:var(--ink-2);margin-top:10px;max-width:44em;font-size:15px}
+.flag .cats{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.flag .cats span{font-size:12.5px;padding:6px 10px;background:var(--bg-2);color:var(--ink-2)}
+.flag-demo{display:block}
+.flag-top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px 40px;align-items:start}
+.demo-badge{border:1px dashed var(--todo);background:var(--todo-bg);color:var(--todo);padding:10px 14px;max-width:22em;font-size:12.5px;line-height:1.4;margin:0!important}
+.demo-badge b{display:block;font-size:13.5px}
+.demo-badge span{display:block;margin-top:2px}
+.idx-wrap{margin-top:24px}
+.idx{width:100%;border-collapse:collapse;font-size:14px}
+.idx caption{text-align:left;padding-bottom:10px}
+.idx th,.idx td{text-align:left;padding:12px 16px 12px 0;border-bottom:1px solid var(--line);font-weight:400;vertical-align:middle}
+.idx thead th{font:400 11.5px/1.2 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line-strong)}
+.idx tbody th{font:500 14px/1.3 var(--display)}
+.idx tbody th small{display:block;font:300 12.5px/1.4 var(--sans);color:var(--muted);margin-top:2px}
+.idx td{font-variant-numeric:tabular-nums;white-space:nowrap}
+.av{display:inline-flex;align-items:center;gap:8px}
+.av i{width:10px;height:10px;border:1.5px solid var(--ink);display:inline-block}
+.av2 i{background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)}
+.av3 i{background:var(--ink)}
+.tr{display:inline-flex;gap:6px;align-items:baseline;color:var(--ink-2)}
+.tr b{font-weight:700;color:var(--ink)}
+.flag-foot{display:flex;flex-wrap:wrap;gap:16px 40px;align-items:center;justify-content:space-between;margin-top:20px}
+.flag-foot .disclaimer{flex:1 1 30em}
+@media (max-width:760px){
+  .flag-top{grid-template-columns:1fr}
+  .idx thead{display:none}
+  .idx,.idx tbody,.idx tr,.idx th,.idx td,.idx caption{display:block}
+  .idx tr{border-bottom:1px solid var(--line);padding:12px 0}
+  .idx th,.idx td{border:0;padding:3px 0}
+  .idx td{display:flex;justify-content:space-between;gap:12px;white-space:normal}
+  .idx td::before{content:attr(data-l);color:var(--muted);font-size:12.5px}
+  .flag-foot .btn{white-space:normal}
+}
+.soon{display:inline-flex;align-items:center;gap:8px;font:400 11.5px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.soon::before{content:"";width:6px;height:6px;border:1px solid currentColor}
+@media (max-width:760px){.flag{grid-template-columns:1fr}.flag .btn{white-space:normal}}
+/* полоса на главной */
+.pstrip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.pstrip a{background:var(--bg);padding:18px 18px 14px;text-decoration:none;display:flex;flex-direction:column;min-width:0;transition:background .2s var(--ease)}
+.pstrip a:hover{background:var(--bg-2)}
+.pstrip .lbl{letter-spacing:.1em}
+.pstrip h3{font:500 14px/1.3 var(--display);margin-top:8px}
+.pstrip .pw-now{margin-top:10px}
+.pstrip .pw-now b{font-size:22px}
+.pstrip .pw-chart{margin-top:10px}
+.pstrip small{margin-top:10px;font-size:11.5px;color:var(--muted)}
+@media (max-width:1000px){.pstrip{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.pstrip{grid-template-columns:1fr}}
+@media (max-width:860px){.pw-grid{grid-template-columns:minmax(0,1fr)}.pw{padding:20px 16px 16px}}
+
 /* footer */
 footer.site{background:var(--hero);color:var(--hero-muted);font-size:14px}
 footer.site .wrap{padding-block:56px 32px}
@@ -835,7 +966,7 @@ footer .about{margin-top:20px;max-width:24em;line-height:1.55}
       <div><h4>ИТ-инфраструктура</h4><ul id="fCat"></ul></div>
       <div><h4>Связь</h4><ul id="fSat"></ul></div>
       <div><h4>Цифровые продукты</h4><ul id="fProd"></ul></div>
-      <div><h4>Компания</h4><ul><li><a href="#solutions">Решения</a></li><li><a href="#config">Конфигураторы</a></li><li><a href="#brands">Бренды</a></li><li><a href="#services">Услуги</a></li><li><a href="#offer">Цена и условия</a></li><li><a href="#sat">Связь</a></li><li><a href="#projects">Проекты</a></li><li><a href="#news">Новости</a></li><li><a href="#about">О компании</a></li><li><a href="#contacts">Контакты</a></li></ul></div>
+      <div><h4>Компания</h4><ul><li><a href="#solutions">Решения</a></li><li><a href="#config">Конфигураторы</a></li><li><a href="#brands">Бренды</a></li><li><a href="#services">Услуги</a></li><li><a href="#offer">Цена и условия</a></li><li><a href="#sat">Связь</a></li><li><a href="#projects">Проекты</a></li><li><a href="#news">Новости</a></li><li><a href="#pulse">Пульс рынка</a></li><li><a href="#about">О компании</a></li><li><a href="#contacts">Контакты</a></li></ul></div>
     </div>
     <div class="f-bottom">
       <span>© 2026 ООО «Реномме Групп» · ИНН 9725063607 · 117246, Москва, Научный пр-д, 6</span>
@@ -1584,7 +1715,7 @@ function introInit(){
    Дисклеймер — ОДИН компонент на весь сайт: формулировку правят здесь.
    ===================================================================== */
 var DISCLAIMER='Информация на сайте носит справочный характер и не является публичной офертой (п. 2 ст. 437 ГК РФ). Размер вознаграждения, стоимость, сроки и иные условия определяются индивидуально и фиксируются только в подписанном договоре.';
-function disclaimer(extra){return '<p class="disclaimer">'+DISCLAIMER+(extra?' '+extra:'')+'</p>'}
+function disclaimer(extra,base){return '<p class="disclaimer">'+(base||DISCLAIMER)+(extra?' '+extra:'')+'</p>'} /* base — отраслевая редакция (например, PULSE_DISCLAIMER для «Пульса рынка») */
 /* ставки вознаграждения утверждены владельцем 25.09.2026; пороги закрыты по замечанию Харви */
 var COMMISSION=[['7%','до 30 млн ₽ включительно'],['5%','свыше 30 до 100 млн ₽ включительно'],['3,5%','свыше 100 млн ₽ до 1 млрд ₽ включительно'],['1,5%','свыше 1 млрд ₽']];
 var FEE_NOTE='Только для коммерческих заказчиков. Процент — от суммы договора.';
@@ -1634,6 +1765,10 @@ P.home=function(){
   /* Решения */
   '<section class="block alt"><div class="wrap">'+secHead('Решения','Начните с задачи, а не со спецификации','Типовые сценарии для бизнеса и госзаказчиков: состав решения и короткий бриф вместо долгой переписки.')+solsHtml(SOL)+
   '<div class="more-row"><a class="more" href="#solutions">Все решения →</a><a class="more" href="#config">Конфигураторы →</a></div></div></section>'+
+
+  /* Пульс рынка: 4 мини-графика из data/pulse.json */
+  '<section class="block"><div class="wrap">'+secHead('Пульс рынка','Рынок в цифрах','Открытые данные об ИИ-вычислениях, спутниковой отрасли, курсах и кибербезопасности. Источник и дата — под каждым графиком.')+pstripHtml()+
+  '<div class="more-row"><a class="more" href="#pulse">Весь пульс рынка →</a></div></div></section>'+
 
   /* Цифровые продукты */
   '<section class="block dark"><div class="wrap">'+secHead('Цифровые продукты','Собственные ИИ-продукты','Мы не только поставляем вычисления для ИИ — мы на них работаем. Подключение по подписке.')+prodsHtml()+'</div></section>'+
@@ -1871,7 +2006,7 @@ function newsPage(n){return head({crumbs:[['Главная','home'],['Новос
 P.about=function(){return head({crumbs:[['Главная','home'],['Компания']],h1:'Renomme Group',lede:'Поставщик ИТ-инфраструктуры и оборудования связи, разработчик цифровых продуктов на базе ИИ. Работаем с производителями и поставщиками на разных мировых рынках: законное таможенное оформление и полный пакет документов.'})+
  '<section class="block"><div class="wrap split"><div>'+secHead('Принципы','Почему нам доверяют','')+
  '<ul class="lst"><li><b>Работа с производителями</b><span>Контракты с производителями и авторизованными поставщиками</span></li><li><b>Законное таможенное оформление</b><span>Оформление по праву ЕАЭС с уплатой пошлин и НДС</span></li><li><b>Полный пакет документов</b><span>Оборудование принимается на баланс и проходит приёмку без вопросов</span></li><li><b>Один ответственный</b><span>Перед заказчиком отвечает Реномме Групп</span></li></ul></div>'+
- '<div>'+secHead('Поставки','Как мы работаем','')+'<ul class="lst"><li><b>Мировые рынки</b><span>Работаем с производителями и поставщиками на разных мировых рынках</span></li><li><b>Под задачу</b><span>Подбор, переговоры с производителем, лимитированные серии, сборка серверов под проект</span></li><li><b>Прозрачная цена</b><span>Статьи расходов отдельными строками, вознаграждение — отдельная строка. <a class="more" href="#offer">Подробнее →</a></span></li></ul>'+todo('Цифры (контракты, сумма госконтрактов) — только после сверки с ЕИС')+'</div></div></section>'+
+ '<div>'+secHead('Поставки','Как мы работаем','')+'<ul class="lst"><li><b>Мировые рынки</b><span>Работаем с производителями и поставщиками на разных мировых рынках</span></li><li><b>Под задачу</b><span>Подбор, переговоры с производителем, лимитированные серии, сборка серверов под проект</span></li><li><b>Прозрачная цена</b><span>Статьи расходов отдельными строками, вознаграждение — отдельная строка. <a class="more" href="#offer">Подробнее →</a></span></li><li><b>Пульс рынка</b><span>Открытые данные о ценах на вычисления, спутниковой отрасли, курсах и киберугрозах. <a class="more" href="#pulse">Открыть →</a></span></li></ul>'+todo('Цифры (контракты, сумма госконтрактов) — только после сверки с ЕИС')+'</div></div></section>'+
  '<section class="block alt"><div class="wrap">'+secHead('Команда','Руководители направлений','')+
  '<div class="team">'+TEAM.map(function(m){return '<div class="mem"><div class="av"><svg aria-hidden="true" viewBox="0 0 222 172"><use href="#rmark"/></svg></div><b>'+m[0]+'</b><span>'+m[1]+'</span></div>'}).join('')+'</div>'+
  todo('Фото, имена и фамилии руководителей')+'</div></section>'+
@@ -1919,12 +2054,234 @@ P.sitemap=function(){
    '<section><h3>Связь</h3><ul>'+li('Спутниковое оборудование','sat','ok')+dirOf('com').groups[0].cats.map(function(c){return li(c.t,'c-'+c.id,itemsIn(c.id).length?'demo':'need',true)}).join('')+'</ul>'+
     '<h3 style="margin-top:36px">Решения и конфигураторы</h3><ul>'+li('Решения','solutions','ok')+SOL.map(function(s){return li(s.t,'sol-'+s.id,'demo',true)}).join('')+li('Конфигураторы','config','ok')+Object.keys(CFG).map(function(k){return li(CFG[k].t,'cfg-'+k,'demo',true)}).join('')+'</ul>'+
     '<h3 style="margin-top:36px">Цифровые продукты</h3><ul>'+li('Все продукты','products','ok')+DPROD.map(function(p){return li(p.t,'dp-'+p.id,'demo',true)}).join('')+'</ul></section>'+
-   '<section><h3>Компания</h3><ul>'+li('Главная','home','check')+li('Бренды','brands','check')+BRANDS.filter(function(b){return b.lines}).map(function(b){return li(b.t,'b-'+b.id,'demo',true)}).join('')+li('Остальные бренды',null,'need',true)+li('Услуги','services','ok')+SERV.map(function(v){return li(v.t,'svc-'+v.id,v.id==='maintenance'?'demo':'ok',true)}).join('')+li('Проекты','projects','demo')+li('Новости','news','need')+li('Компания','about','demo')+li('Контакты','contacts','ok')+li('Политика конфиденциальности',null,'need')+li('Согласие на обработку ПДн',null,'need')+'</ul></section>'+
+   '<section><h3>Компания</h3><ul>'+li('Главная','home','check')+li('Бренды','brands','check')+BRANDS.filter(function(b){return b.lines}).map(function(b){return li(b.t,'b-'+b.id,'demo',true)}).join('')+li('Остальные бренды',null,'need',true)+li('Услуги','services','ok')+SERV.map(function(v){return li(v.t,'svc-'+v.id,v.id==='maintenance'?'demo':'ok',true)}).join('')+li('Проекты','projects','demo')+li('Новости','news','need')+li('Компания','about','demo')+li('Пульс рынка','pulse','ok',true)+li('Контакты','contacts','ok')+li('Политика конфиденциальности',null,'need')+li('Согласие на обработку ПДн',null,'need')+'</ul></section>'+
   '</div>'+
   '<h2 class="h-sub" style="margin-top:72px">Шаблоны страниц</h2>'+
   '<ol class="tpl" style="list-style:none;margin:0;padding:0">'+
    [['Направление','Группы и категории, поиск, конфигураторы'],['Категория','Подкатегории, бренды, решения, набор характеристик'],['Подкатегория','Список товаров, фильтры по бренду и характеристикам'],['Карточка товара','Бренд, линейка, P/N, характеристики, документы, аналоги, услуги, запрос цены'],['Бренд','Описание, линейки со ссылками на подкатегории, категории, позиции'],['Решение','Типовой состав, услуги, бриф или конфигуратор'],['Конфигуратор','Параметры, расчёт, подходящие позиции, добавление в запрос'],['Цифровой продукт','Задача, возможности, подключение, решения, демо'],['Услуга','Состав работ, уровни обслуживания, направления'],['Кейс','Задача, решение, результат, бренды, услуги'],['Новость','Дата, рубрика, текст, связанные разделы']].map(function(t){return '<li><b>'+t[0]+'</b><span>'+t[1]+'</span></li>'}).join('')+
   '</ol></div></section>';
+};
+
+/* =====================================================================
+   ПУЛЬС РЫНКА (#pulse, #pulse-ai|market|space|sec; полоса на главной).
+   Данные — только снимок data/pulse.json (scripts/pulse-fetch.mjs). Браузер посетителя
+   в сторонние API не ходит, сторонних виджетов и cookies нет (юрпроверка Харви, п. 7).
+   Графики — свой SVG по фактической ширине контейнера; перерисовка при resize.
+   ===================================================================== */
+var PULSE=null, PULSE_ERR=null, PULSE_Q=[], PULSE_TARGET=null, PW_STATE={vendor:''};
+var PULSE_DISCLAIMER='Аналитика носит информационный характер и не является публичной офертой (п. 2 ст. 437 ГК РФ), прогнозом или обещанием цены или срока. Данные третьих лиц приводятся со ссылкой на источник, за их точность Реномме Групп не отвечает. Товарные знаки принадлежат их правообладателям; упоминание компании не означает партнёрства.';
+var MON=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+function pulseLoad(cb){
+  if(PULSE||PULSE_ERR){cb();return}
+  PULSE_Q.push(cb); if(PULSE_Q.length>1)return;
+  fetch('data/pulse.json',{cache:'no-cache'}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
+   .then(function(j){PULSE=j}).catch(function(e){PULSE_ERR=e})
+   .then(function(){var q=PULSE_Q;PULSE_Q=[];q.forEach(function(f){f()})});
+}
+function nf(x,d){var s=Math.abs(x).toFixed(d||0).split('.');return (x<0?'−':'')+s[0].replace(/\B(?=(\d{3})+(?!\d))/g,' ')+(s[1]?','+s[1]:'')}
+function ts(d){return Date.parse(d+(d.length===7?'-01':'')+'T00:00:00Z')}
+function monL(d,y){var p=d.split('-');return MON[+p[1]-1]+(y?' '+p[0].slice(2):'')}
+function bn(musd){return musd>=1000?'$'+nf(musd/1000,1)+' млрд':'$'+nf(musd)+' млн'}
+function srcLine(s,asOf,extra){
+  return '<p class="pw-src">Источник: <a href="'+esc(s.url)+'" target="_blank" rel="noopener noreferrer">'+esc(s.title)+'</a> · Лицензия: '+esc(s.license)+' · Данные на '+fmtDate(asOf)+(extra||'')+'</p>';
+}
+function nowHtml(v,t){return '<div class="pw-now"><b>'+v+'</b>'+(t?'<span>'+t+'</span>':'')+'</div>'}
+function ticks(min,max,n){var st=(max-min)/n, p=Math.pow(10,Math.floor(Math.log10(st))), m=st/p; st=(m<1.5?1:m<3?2:m<7?5:10)*p; var out=[];for(var v=Math.ceil(min/st)*st;v<=max+1e-9;v+=st)out.push(Math.round(v/st)*st);return out}
+
+/* линия: series=[{pts:[[x,y],..],cls}], opt={h,yfmt,xl:[[x,label]],area,valfmt,zero,mini,noval} */
+function svgLine(w,series,opt){
+  var h=opt.h||160, L=opt.mini?4:44, R=opt.mini?4:12, T=opt.mini?8:14, B=opt.mini?4:22;
+  var xs=[],ys=[];series.forEach(function(s){s.pts.forEach(function(p){xs.push(p[0]);ys.push(p[1])})});
+  var x0=Math.min.apply(null,xs), x1=Math.max.apply(null,xs), y0=Math.min.apply(null,ys), y1=Math.max.apply(null,ys);
+  if(opt.zero)y0=0; var pad=(y1-y0)*0.12||1; if(!opt.zero)y0-=pad; y1+=pad;
+  var tk=opt.mini?[]:ticks(y0,y1,3);
+  function X(x){return L+(x-x0)/((x1-x0)||1)*(w-L-R)} function Y(y){return T+(1-(y-y0)/((y1-y0)||1))*(h-T-B)}
+  var g='';
+  tk.forEach(function(v){if(v<y0||v>y1)return;var y=Y(v).toFixed(1);g+='<line class="pl-grid" x1="'+L+'" x2="'+(w-R)+'" y1="'+y+'" y2="'+y+'"/><text class="pl-axis" x="'+(L-8)+'" y="'+y+'" dy="4" text-anchor="end">'+(opt.yfmt?opt.yfmt(v):nf(v))+'</text>'});
+  (opt.xl||[]).forEach(function(l,i,a){var anc=i===0?'start':i===a.length-1?'end':'middle';g+='<text class="pl-axis" x="'+X(l[0]).toFixed(1)+'" y="'+(h-4)+'" text-anchor="'+anc+'">'+l[1]+'</text>'});
+  series.forEach(function(s,si){
+    var d=s.pts.map(function(p,i){return (i?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1)}).join('');
+    if(opt.area&&si===0)g+='<path class="pl-area" d="'+d+'L'+X(s.pts[s.pts.length-1][0]).toFixed(1)+' '+(h-B)+'L'+X(s.pts[0][0]).toFixed(1)+' '+(h-B)+'Z"/>';
+    g+='<path class="pl-line'+(s.cls?' '+s.cls:'')+'" pathLength="1" d="'+d+'"/>';
+    if(si===0){var lp=s.pts[s.pts.length-1],lx=X(lp[0]),ly=Y(lp[1]),vt=opt.valfmt?opt.valfmt(lp[1]):nf(lp[1]);
+      g+='<rect class="pl-dot" x="'+(lx-3.5).toFixed(1)+'" y="'+(ly-3.5).toFixed(1)+'" width="7" height="7"><title>'+esc(vt)+'</title></rect>';
+      if(!opt.noval)g+='<text class="pl-val" x="'+(lx-8).toFixed(1)+'" y="'+(ly-9).toFixed(1)+'" text-anchor="end">'+vt+'</text>';}
+  });
+  return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+esc(opt.label||'График')+'">'+g+'</svg>';
+}
+/* столбцы: rows=[[подпись,значение,всего?,подсказка?]], opt={h,now,label,mini} */
+function svgBars(w,rows,opt){
+  var h=opt.h||170, L=opt.mini?0:30, T=opt.mini?4:18, B=opt.mini?2:22;
+  var max=Math.max.apply(null,rows.map(function(r){return r[2]!=null?r[2]:r[1]}))||1;
+  var tk=opt.mini?[]:ticks(0,max,3); max=Math.max(max,tk[tk.length-1]||0);
+  var n=rows.length, bw=(w-L)/n, gap=Math.max(1,Math.min(6,bw*0.28));
+  function Y(v){return T+(1-v/max)*(h-T-B)}
+  var g='';
+  tk.forEach(function(v){var y=Y(v).toFixed(1);g+='<line class="pl-grid" x1="'+L+'" x2="'+w+'" y1="'+y+'" y2="'+y+'"/><text class="pl-axis" x="'+(L-6)+'" y="'+y+'" dy="4" text-anchor="end">'+nf(v)+'</text>'});
+  var every=Math.max(1,Math.ceil(46/bw));
+  rows.forEach(function(r,i){
+    var x=L+i*bw+gap/2, bwi=Math.max(1,bw-gap), last=i===n-1, tot=r[2];
+    var tip=esc(r[3]||r[0])+': '+nf(r[1])+(tot!=null?' из '+nf(tot):'');
+    if(tot!=null)g+='<rect class="pl-bar2" x="'+x.toFixed(1)+'" y="'+Y(tot).toFixed(1)+'" width="'+bwi.toFixed(1)+'" height="'+(h-B-Y(tot)).toFixed(1)+'"><title>'+tip+'</title></rect>';
+    g+='<rect class="pl-bar'+(last&&opt.now?' now':'')+'" x="'+x.toFixed(1)+'" y="'+Y(r[1]).toFixed(1)+'" width="'+bwi.toFixed(1)+'" height="'+Math.max(0,h-B-Y(r[1])).toFixed(1)+'"><title>'+tip+'</title></rect>';
+    if(!opt.mini&&((n-1-i)%every===0))g+='<text class="pl-axis" x="'+(x+bwi/2).toFixed(1)+'" y="'+(h-6)+'" text-anchor="middle">'+esc(r[0])+'</text>';
+    if(last&&opt.now&&!opt.mini)g+='<text class="pl-val" x="'+(x+bwi).toFixed(1)+'" y="'+(Y(r[1])-5).toFixed(1)+'" text-anchor="end">'+nf(r[1])+'</text>';
+  });
+  return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+esc(opt.label||'График')+'">'+g+'</svg>';
+}
+/* точечный график с логарифмической осью Y (Epoch AI) */
+function svgScatter(w,pts,vendor){
+  var h=w<500?220:260, L=48, R=12, T=26, B=22;
+  var x0=ts('2016-01-01'), x1=Date.now(), ly0=1, ly1=Math.log10(5000);
+  function X(t){return L+(t-x0)/(x1-x0)*(w-L-R)} function Y(v){return T+(1-(Math.log10(Math.max(v,10))-ly0)/(ly1-ly0))*(h-T-B)}
+  var g='';
+  [10,100,1000].forEach(function(v){var y=Y(v).toFixed(1);g+='<line class="pl-grid" x1="'+L+'" x2="'+(w-R)+'" y1="'+y+'" y2="'+y+'"/><text class="pl-axis" x="'+(L-8)+'" y="'+y+'" dy="4" text-anchor="end">'+nf(v)+'</text>'});
+  for(var yr=2016;yr<=new Date().getFullYear();yr+=(w<500?4:2))g+='<text class="pl-axis" x="'+X(ts(yr+'-01-01')).toFixed(1)+'" y="'+(h-4)+'" text-anchor="middle">'+yr+'</text>';
+  var sel=pts.filter(function(p){return !vendor||p[1]===vendor}), top=sel.slice().sort(function(a,b){return b[3]-a[3]||(a[2]<b[2]?1:-1)})[0];
+  pts.forEach(function(p){var on=!vendor||p[1]===vendor; if(p===top)return;
+    g+='<rect class="pl-pt'+(on?' on':'')+'" x="'+(X(ts(p[2]))-3).toFixed(1)+'" y="'+(Y(p[3])-3).toFixed(1)+'" width="6" height="6"><title>'+esc(p[0])+' · '+fmtDate(p[2])+' · '+nf(p[3])+' TFLOPS'+(p[4]?' · '+p[4]+' ГБ':'')+'</title></rect>'});
+  if(top){var tx=X(ts(top[2])),ty=Y(top[3]);g+='<rect class="pl-pt top" x="'+(tx-4).toFixed(1)+'" y="'+(ty-4).toFixed(1)+'" width="8" height="8"><title>'+esc(top[0])+'</title></rect><text class="pl-val" x="'+(tx-8).toFixed(1)+'" y="'+(ty-10).toFixed(1)+'" text-anchor="end">'+esc(top[0])+' · '+nf(top[3])+'</text>';}
+  return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Производительность ИИ-ускорителей по дате выхода">'+g+'</svg>';
+}
+function hbHtml(rows){var max=Math.max.apply(null,rows.map(function(r){return r.v}))||1;
+  return '<ul class="hb">'+rows.map(function(r){return '<li'+(r.tip?' title="'+esc(r.tip)+'"':'')+'><span class="l">'+esc(r.l)+(r.ls?'<small>'+esc(r.ls)+'</small>':'')+'</span><span class="t"><i style="width:'+(r.v/max*100).toFixed(1)+'%"></i></span><span class="v">'+r.vl+(r.vs?'<small>'+r.vs+'</small>':'')+'</span></li>'}).join('')+'</ul>'}
+function chartBox(id){return '<div class="pw-chart" data-ch="'+id+'"></div>'}
+function cbrChart(w,arr,label){
+  var pts=arr.map(function(r){return [ts(r[0]),r[1]]}), f=arr[0][0], l=arr[arr.length-1][0];
+  return svgLine(w,[{pts:pts}],{h:150,area:true,label:label,valfmt:function(v){return nf(v,2)},xl:[[ts(f),monL(f,true)],[ts(l),monL(l,true)]]});
+}
+function coChart(w,c){var q=c.quarters;return svgLine(w,[{pts:q.map(function(r,i){return [i,r[1]]})}],{h:56,mini:true,noval:true,zero:true,area:true,label:'Выручка '+c.name+' по кварталам'})}
+
+/* ---------- виджеты: h(data,source) — карточка, c[id](w,data) — графики по ширине ---------- */
+var PW={
+ gpu:{h:function(d,s){
+   var r=d.rows, h100=r.filter(function(x){return x.model==='H100'})[0]||r[0], stale=(Date.now()-ts(d.asOf))/864e5>45;
+   return '<span class="lbl">ИИ-вычисления</span><h3>Аренда GPU в облаках: цена за GPU-час</h3><p class="q">Сколько стоит час работы ускорителя у облачных провайдеров — ориентир для решения «арендовать или купить своё».</p>'+
+    nowHtml('$'+nf(h100.p25,2),h100.model+', 25-й перцентиль предложений за GPU-час'+(d.rubRate?' · ≈ '+nf(h100.p25*d.rubRate.usd)+' ₽ по курсу ЦБ на '+fmtDate(d.rubRate.date):''))+
+    '<div class="pw-chart">'+hbHtml(r.map(function(x){return {l:x.model,ls:plural(x.offers,'предложение','предложения','предложений')+' · '+plural(x.providers,'провайдер','провайдера','провайдеров'),v:x.p25,vl:'$'+nf(x.p25,2),vs:'медиана $'+nf(x.median,2)}}))+'</div>'+
+    (stale?'<p class="pw-note">GPU Tracker не обновлял публичную выгрузку с '+fmtDate(d.asOf)+' — показан последний опубликованный снимок.</p>':'')+
+    srcLine(s,d.asOf,' · '+plural(d.providerCount,'провайдер','провайдера','провайдеров')+' в выгрузке; цена инстанса поделена на число GPU в нём');}},
+ mlperf:{h:function(d,s){
+   var t=d.rows[0];
+   return '<span class="lbl">ИИ-вычисления</span><h3>'+esc(d.round)+': '+esc(d.benchmark)+'</h3><p class="q">Пропускная способность серверов с 8 ускорителями на эталонной задаче генерации текста. Для каждой модели ускорителя — лучший результат раунда.</p>'+
+    nowHtml(nf(t.result),'токенов/с · '+esc(t.acc)+' · '+esc(t.org)+', '+esc(t.system))+
+    '<div class="pw-chart">'+hbHtml(d.rows.map(function(x){return {l:x.acc.replace(/^(NVIDIA|AMD Instinct) /,''),ls:x.org,v:x.result,vl:nf(x.result),vs:'токенов/с',tip:x.org+' · '+x.system+' · '+x.loc}}))+'</div>'+
+    '<p class="pw-note">Division: '+d.division+' · сценарий '+d.scenario+' · категория '+d.availability+' · 1 узел, 8 ускорителей. Результаты систем целиком, сравнение только внутри раунда v6.1. Идентификатор результата — путь в <a href="'+esc(d.repo)+'" target="_blank" rel="noopener noreferrer">репозитории MLCommons</a> (подсказка при наведении на строку).</p>'+
+    srcLine(s,PULSE.snapshot.slice(0,10),'<span class="tm">The MLPerf name and logo are registered and unregistered trademarks of MLCommons Association in the United States and other countries. All rights reserved. Unauthorized use strictly prohibited. See <a href="https://mlcommons.org" target="_blank" rel="noopener noreferrer">www.mlcommons.org</a> for more information.</span>');}},
+ epoch:{h:function(d,s){
+   var vs=['','NVIDIA','AMD','Google','Huawei','Intel','Другие'];
+   return '<span class="lbl">ИИ-вычисления</span><h3>Эволюция ИИ-ускорителей</h3><p class="q">Пиковая производительность FP16/BF16 по дате выхода, TFLOPS, логарифмическая шкала. Нажмите производителя, чтобы выделить его линейку.</p>'+
+    '<div class="chips" id="pwVendor" role="group" aria-label="Производитель">'+vs.map(function(v){return '<button type="button" data-v="'+esc(v)+'" aria-pressed="'+(PW_STATE.vendor===v)+'">'+(v||'Все')+'</button>'}).join('')+'</div>'+
+    chartBox('epoch')+srcLine(s,d.asOf,' · '+plural(d.points.length,'ускоритель','ускорителя','ускорителей')+' с 2016 года');},
+  c:{epoch:function(w,d){return svgScatter(w,d.points,PW_STATE.vendor)}}},
+ cbr:{h:function(d,s){
+   function blk(id,t,arr){var l=arr[arr.length-1],f=arr[0],ch=(l[1]/f[1]-1)*100;return '<div><span class="lbl">'+t+'</span>'+nowHtml(nf(l[1],2)+' ₽','<span class="up">'+(ch>=0?'+':'')+nf(ch,1)+'%</span> за 13 месяцев · на '+fmtDate(l[0]))+chartBox(id)+'</div>'}
+   return '<span class="lbl">Рынок и курсы</span><h3>Курс рубля: доллар и юань</h3><p class="q">Валютная составляющая импортной поставки — официальный курс Банка России за 13 месяцев.</p>'+
+    '<div class="pw-two">'+blk('usd','Доллар США',d.usd)+blk('cny','Китайский юань',d.cny)+'</div>'+srcLine(s,d.usd[d.usd.length-1][0]);},
+  c:{usd:function(w,d){return cbrChart(w,d.usd,'Курс доллара США, ₽')},cny:function(w,d){return cbrChart(w,d.cny,'Курс китайского юаня, ₽')}}},
+ sec:{h:function(d,s){
+   var ok=d.companies.filter(function(c){return !c.error});
+   return '<span class="lbl">Рынок и курсы</span><h3>Кто растёт в инфраструктуре</h3><p class="q">Квартальная выручка производителей GPU, серверов и сетевого оборудования по отчётности в SEC — косвенный индикатор спроса на ИИ-инфраструктуру и загрузки производства.</p>'+
+    '<div class="cos">'+ok.map(function(c,i){var l=c.quarters[c.quarters.length-1];return '<div class="co"><b>'+esc(c.name)+'</b><div class="n"><span>'+bn(l[1])+' · '+esc(c.last)+'</span>'+(c.yoy!=null?'<em>'+(c.yoy>=0?'+':'')+nf(c.yoy,1)+'% г/г</em>':'')+'</div>'+chartBox('co'+i)+'</div>'}).join('')+'</div>'+
+    '<p class="pw-note">Кварталы календарные, по разметке SEC; квартал, который компания отдельно не публикует, рассчитан как год минус три квартала. Выручка в долларах США по отчётам 10-Q и 10-K, девять последних кварталов.</p>'+srcLine(s,d.asOf);},
+  c:{}},
+ gcat:{h:function(d,s){
+   var y=d.years, prev=y[y.length-2], mx=Math.max.apply(null,y.slice(0,-1).map(function(r){return r[1]}));
+   return '<span class="lbl">Спутниковая отрасль</span><h3>Орбитальные запуски по годам</h3><p class="q">Сколько раз в год ракеты уходят на орбиту — темп, с которым растут спутниковые группировки и спрос на наземное оборудование.</p>'+
+    nowHtml(nf(prev[1]),'запусков в '+prev[0]+' году'+(prev[1]===mx?' — максимум за десять лет':'')+' · '+nf(prev[2])+' успешных')+
+    chartBox('launch')+'<p class="lbl" style="margin-top:20px;margin-bottom:12px">По стране космодрома, '+d.countryYear+'</p><div class="pw-chart">'+hbHtml(d.byCountry.map(function(c){return {l:c[0],v:c[1],vl:nf(c[1])}}))+'</div>'+
+    srcLine(s,d.asOf,' · '+d.ytdYear+'* — неполный год');},
+  c:{launch:function(w,d){return svgBars(w,d.years.map(function(r,i,a){return [i===a.length-1?r[0]+'*':String(r[0]),r[1],null,String(r[0])]}),{now:true,label:'Орбитальные запуски по годам'})}}},
+ celestrak:{h:function(d,s){
+   return '<span class="lbl">Спутниковая отрасль</span><h3>Активные спутники по странам-владельцам</h3><p class="q">Действующие аппараты на орбите по каталогу CelesTrak: у кого крупнейшие группировки.</p>'+
+    nowHtml(nf(d.active),'активных аппаратов на орбите')+'<div class="pw-chart">'+hbHtml(d.byOwner.map(function(c){return {l:c[0],v:c[1],vl:nf(c[1]),vs:nf(c[1]/d.active*100,1)+'%'}}))+'</div>'+
+    '<p class="pw-note">Активные — статусы каталога «работает», «частично работает», «резерв», «запасной», «продлённая миссия».</p>'+srcLine(s,d.asOf);}},
+ kev:{h:function(d,s){
+   var m12=d.months.slice(-12), net=m12.reduce(function(a,r){return a+r[1]},0), all=m12.reduce(function(a,r){return a+r[2]},0);
+   return '<span class="lbl">Кибербезопасность</span><h3>Эксплуатируемые уязвимости сетевого и ИБ-оборудования</h3><p class="q">Сколько уязвимостей межсетевых экранов, VPN-шлюзов, маршрутизаторов и коммутаторов попадает в каталог реально эксплуатируемых уязвимостей CISA каждый месяц.</p>'+
+    nowHtml(nf(net),'за 12 месяцев из '+nf(all)+' новых записей каталога ('+nf(net/all*100)+'%)')+chartBox('kev')+
+    '<div class="pl-leg"><span><i style="background:var(--chart-line)"></i>Сетевое и ИБ-оборудование</span><span><i style="background:var(--chart-soft)"></i>Остальные продукты</span><span><i style="background:var(--signal)"></i>Текущий месяц, неполный</span></div>'+
+    '<p class="pw-note">Чаще всего за 12 месяцев: '+d.top12.map(function(v){return esc(v[0])+' — '+v[1]}).join(', ')+'. Учитываются '+d.vendors.length+' производителей сетевого и ИБ-оборудования; полный список — в скрипте сбора данных.</p>'+
+    srcLine(s,d.asOf,' · версия каталога '+esc(d.catalogVersion));},
+  c:{kev:function(w,d){var n=d.months.length;return svgBars(w,d.months.map(function(r,i){return [(i===0||r[0].slice(5)==='01'||i===n-1)?monL(r[0],true):monL(r[0]),r[1],r[2],monL(r[0],true)]}),{now:true,label:'Новые записи CISA KEV по месяцам'})}}},
+ owasp:{h:function(d,s){
+   return '<span class="lbl">Кибербезопасность</span><h3>Тройка рисков для ИИ-систем</h3><p class="q">Первые три позиции OWASP Top 10 for LLM Applications 2025 — с чего начинать проверку при внедрении ИИ-ассистентов и агентов.</p>'+
+    '<ol class="risk3" style="list-style:none;padding:0">'+d.items.map(function(x){return '<li><span class="n">'+esc(x[0])+'</span><b>'+esc(x[2])+'</b><i>'+esc(x[1])+'</i><span>'+esc(x[3])+'</span></li>'}).join('')+'</ol>'+
+    srcLine(s,d.verified,' · редакция 2025 · перевод и пояснения — Реномме Групп');}}
+};
+
+/* мини-карточки полосы на главной: [ряд, надзаголовок, заголовок, якорь, значение(d)->[v,подпись], график(w,d)] */
+function nvidia(d){return d.companies.filter(function(x){return x.name==='NVIDIA'&&!x.error})[0]}
+var PSTRIP=[
+ ['kev','Кибербезопасность','Уязвимости сетевого и ИБ-оборудования','sec',function(d){var m=d.months.slice(-12);return [nf(m.reduce(function(a,r){return a+r[1]},0)),'за 12 месяцев · CISA KEV']},function(w,d){return svgBars(w,d.months.slice(-12).map(function(r){return [monL(r[0]),r[1],null,monL(r[0],true)]}),{h:56,mini:true,now:true,label:'CISA KEV по месяцам'})}],
+ ['gcat','Спутниковая отрасль','Орбитальные запуски в год','space',function(d){var p=d.years[d.years.length-2];return [nf(p[1]),'в '+p[0]+' году · GCAT']},function(w,d){return svgBars(w,d.years.map(function(r){return [String(r[0]),r[1],null,String(r[0])]}),{h:56,mini:true,now:true,label:'Запуски по годам'})}],
+ ['cbr','Рынок и курсы','Курс юаня, Банк России','market',function(d){var l=d.cny[d.cny.length-1];return [nf(l[1],2)+' ₽','на '+fmtDate(l[0])]},function(w,d){return svgLine(w,[{pts:d.cny.map(function(r){return [ts(r[0]),r[1]]})}],{h:56,mini:true,noval:true,area:true,label:'Курс юаня'})}],
+ ['sec','Рынок и курсы','Выручка NVIDIA за квартал','market',function(d){var c=nvidia(d);if(!c)return null;return [bn(c.quarters[c.quarters.length-1][1]),c.last+(c.yoy!=null?' · +'+nf(c.yoy,1)+'% г/г':'')+' · SEC']},function(w,d){var c=nvidia(d);return c?coChart(w,c):''}]
+];
+function pstripHtml(){return '<div class="pstrip" id="pstrip">'+PSTRIP.map(function(p,i){return '<a href="#pulse-'+p[3]+'" data-ps="'+i+'"><span class="lbl">'+p[1]+'</span><h3>'+p[2]+'</h3><p class="pw-loading">Загружаем данные…</p></a>'}).join('')+'</div>'}
+function psDate(ser){var d=ser.data;return d.asOf||(d.usd?d.usd[d.usd.length-1][0]:PULSE.snapshot.slice(0,10))}
+
+function pulseRender(first){
+  if(!document.querySelector('[data-pw],[data-ps]'))return;
+  if(PULSE_ERR||!PULSE){document.querySelectorAll('[data-pw],[data-ps]').forEach(function(el){el.innerHTML='<p class="pw-err">Данные временно недоступны.</p>'});return}
+  document.querySelectorAll('[data-pw]').forEach(function(el){
+    var k=el.dataset.pw, ser=PULSE.series[k], def=PW[k];
+    if(!ser||ser.status!=='ok'||!def){el.innerHTML='<p class="pw-err">Источник временно недоступен — ряд не показываем.</p>';return}
+    if(!el.dataset.ok){el.innerHTML=def.h(ser.data,ser.source);el.dataset.ok='1'}
+    el.querySelectorAll('[data-ch]').forEach(function(box){
+      var id=box.dataset.ch, w=Math.max(180,Math.floor(box.clientWidth)), fn=def.c&&def.c[id];
+      if(k==='sec'){var c=ser.data.companies.filter(function(x){return !x.error})[+id.slice(2)];if(c)box.innerHTML=coChart(w,c);}
+      else if(fn)box.innerHTML=fn(w,ser.data);
+    });
+    if(first)el.querySelectorAll('.pw-chart').forEach(function(b){b.classList.add('drawn')});
+  });
+  document.querySelectorAll('[data-ps]').forEach(function(a){
+    var p=PSTRIP[+a.dataset.ps], ser=PULSE.series[p[0]];
+    if(!ser||ser.status!=='ok'){a.hidden=true;return}
+    var n=p[4](ser.data); if(!n){a.hidden=true;return}
+    var w=Math.max(150,Math.floor(a.clientWidth-36));
+    a.innerHTML='<span class="lbl">'+p[1]+'</span><h3>'+p[2]+'</h3>'+nowHtml(n[0],n[1])+'<div class="pw-chart'+(first?' drawn':'')+'">'+p[5](w,ser.data)+'</div><small>Данные на '+fmtDate(psDate(ser))+'</small>';
+  });
+  var snap=document.getElementById('pulseSnap'); if(snap){var d=new Date(PULSE.snapshot);snap.textContent=fmtDate(PULSE.snapshot.slice(0,10))+', '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+' (время вашего устройства)';}
+  var vg=document.getElementById('pwVendor');
+  if(vg&&!vg.dataset.b){vg.dataset.b='1';vg.addEventListener('click',function(e){var b=e.target.closest('[data-v]');if(!b)return;PW_STATE.vendor=b.dataset.v;vg.querySelectorAll('[data-v]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b))});var box=document.querySelector('[data-ch="epoch"]');box.innerHTML=PW.epoch.c.epoch(Math.max(180,Math.floor(box.clientWidth)),PULSE.series.epoch.data);});}
+  if(first&&PULSE_TARGET){var te=document.getElementById(PULSE_TARGET);PULSE_TARGET=null;if(te)te.scrollIntoView();}
+}
+var pulseRT=0; window.addEventListener('resize',function(){clearTimeout(pulseRT);pulseRT=setTimeout(function(){if(PULSE)pulseRender(false)},150)});
+
+/* ФЛАГМАН — ДЕМО. Решение владельца 25.09.2026: «цифры временно придумать, чтобы смоделировать».
+   Все значения ниже УСЛОВНЫЕ: не из данных Реномме и не из открытых источников. На виджете всегда плашка «Демо».
+   Заменить реальными обезличенными данными закупок после методики и согласования с Харви (NDA дистрибьюторов). */
+var INDEX_DEMO={month:'сентябрь 2026',rows:[
+ ['GPU-серверы','Обучение и инференс, 8 ускорителей','16–24','70–100',3,1,'+2 нед.'],
+ ['Серверы общего назначения','Стоечные x86, 1U–2U','4–8','30–50',1,0,'без изменений'],
+ ['Системы хранения данных','All-flash и гибридные СХД','8–12','50–70',2,-1,'−1 нед.'],
+ ['Сети','Коммутаторы ЦОД 100–400G','8–14','50–70',2,1,'+1 нед.'],
+ ['Информационная безопасность','Межсетевые экраны, VPN-шлюзы','6–10','50–100',2,0,'без изменений'],
+ ['Спутниковое оборудование','Терминалы, RF-тракт, антенны','10–16','50–70',2,-1,'−2 нед.']]};
+var AV_L={1:'Доступно',2:'Под заказ',3:'Дефицит'};
+function flagDemoHtml(){
+  return '<section class="block" style="padding-bottom:0"><div class="wrap"><div class="flag flag-demo">'+
+   '<div class="flag-top"><div><span class="soon">Флагман · обновление раз в месяц</span><h2>Индекс доступности инфраструктуры Реномме</h2><p>Сроки поставки, типичная предоплата и доступность по категориям оборудования в России. Обезличенно — диапазонами и статусами, без цен.</p></div>'+
+   '<p class="demo-badge" role="note"><b>Демо: пример вида, цифры условные</b><span>Реальные данные появятся после утверждения методики</span></p></div>'+
+   '<div class="idx-wrap"><table class="idx"><caption class="lbl">Демо-пример на '+INDEX_DEMO.month+'</caption><thead><tr><th>Категория</th><th>Срок поставки</th><th>Предоплата</th><th>Доступность</th><th>К прошлому месяцу</th></tr></thead><tbody>'+
+   INDEX_DEMO.rows.map(function(r){var ar=r[5]>0?'↑':r[5]<0?'↓':'→';return '<tr><th scope="row">'+r[0]+'<small>'+r[1]+'</small></th><td data-l="Срок поставки">'+r[2]+'\u00a0нед.</td><td data-l="Предоплата">'+r[3]+'%</td><td data-l="Доступность"><span class="av av'+r[4]+'"><i aria-hidden="true"></i>'+AV_L[r[4]]+'</span></td><td data-l="Срок к прошлому месяцу"><span class="tr tr'+(r[5]>0?'up':r[5]<0?'dn':'eq')+'"><b aria-hidden="true">'+ar+'</b>'+r[6]+'</span></td></tr>'}).join('')+
+   '</tbody></table></div>'+
+   '<div class="flag-foot"><p class="disclaimer" style="margin-top:0">Демонстрационный макет: значения условные и не отражают фактические сроки и условия поставок Реномме Групп. Сроки и условия определяются индивидуально и фиксируются только в договоре.</p><a class="btn btn-primary" href="#contacts">Узнать срок под вашу конфигурацию <span aria-hidden="true">→</span></a></div>'+
+   '</div></div></section>';
+}
+P.pulse=function(){
+  function card(k,wide){return '<article class="pw'+(wide?' wide':'')+'" data-pw="'+k+'"><p class="pw-loading">Загружаем данные…</p></article>'}
+  function sec(id,alt,k,h,p,body){return '<section class="block pulse-sec'+(alt?' alt':'')+'" id="'+id+'"><div class="wrap">'+secHead(k,h,p)+body+'</div></section>'}
+  return head({crumbs:[['Главная','home'],['Компания','about'],['Пульс рынка']],kicker:'Аналитика',h1:'Пульс рынка',lede:'Открытые данные о рынке ИТ-инфраструктуры, ИИ-вычислений, спутниковой отрасли и кибербезопасности. Под каждым графиком — источник, лицензия и дата данных.',
+    tags:'<div class="tags"><a class="tag" href="#pulse-ai">ИИ-вычисления</a><a class="tag" href="#pulse-market">Рынок и курсы</a><a class="tag" href="#pulse-space">Спутниковая отрасль</a><a class="tag" href="#pulse-sec">Кибербезопасность</a></div>'})+
+  flagDemoHtml()+
+  sec('pulse-ai',false,'ИИ-вычисления','Цены и бенчмарки ИИ','Во что обходится вычислительная мощность и как быстро она растёт.','<div class="pw-grid">'+card('gpu')+card('mlperf')+card('epoch',true)+'</div>')+
+  sec('pulse-market',true,'Рынок и курсы','Валюта и спрос','Курс, по которому пересчитывается импортная поставка, и темпы роста ключевых производителей.','<div class="pw-grid one">'+card('cbr')+card('sec')+'</div>')+
+  sec('pulse-space',false,'Спутниковая отрасль','Орбита растёт','Запуски и действующие группировки — контекст для закупок спутникового оборудования.','<div class="pw-grid">'+card('gcat')+card('celestrak')+'</div>')+
+  sec('pulse-sec',true,'Кибербезопасность','Что атакуют сейчас','Реальные данные об эксплуатации уязвимостей вместо анимированных карт атак.','<div class="pw-grid one">'+card('kev')+card('owasp')+'</div>')+
+  '<section class="block" style="padding-top:48px"><div class="wrap">'+disclaimer('',PULSE_DISCLAIMER)+'<p class="disclaimer" style="margin-top:8px">Снимок данных: <span id="pulseSnap">—</span>. Данные собирает скрипт из открытых источников и публикует вместе с сайтом; браузер посетителя к сторонним сервисам не обращается.</p>'+
+  ctaBox('Нужен срок и цена под вашу задачу?','Пришлите спецификацию — оценим сроки поставки и доступность позиций и подберём аналоги.','Узнать срок')+'</div></section>';
 };
 
 /* =====================================================================
@@ -1948,6 +2305,8 @@ function route(){
   else if((m=h.match(/^svc-(.+)$/))){var v=SERV.filter(function(x){return x.id===m[1]})[0];if(v){html=servPage(v);sec='services';}}
   else if((m=h.match(/^n-(.+)$/))){var n=NEWS.filter(function(x){return x.id===m[1]})[0];if(n){html=newsPage(n);sec='news';}}
   else if((m=h.match(/^offer-(price|turnkey|terms|club)$/))){html=P.offer();sec='offer';target=h;}
+  else if((m=h.match(/^pulse-(ai|market|space|sec)$/))){html=P.pulse();target=h;PULSE_TARGET=h;}
+  if(h==='pulse'||/^pulse-/.test(h))sec='about';
   if(h==='config')sec='solutions';
   if(!html){html=P.home();sec='home';}
   app.innerHTML=html;
@@ -1993,6 +2352,7 @@ function reveal(){
 }
 function bind(){
   introInit();
+  if(document.querySelector('[data-pw],[data-ps]'))pulseLoad(function(){pulseRender(true)});
   reveal();
   var hs=document.getElementById('heroSearch');
   if(hs) hs.addEventListener('submit',function(e){e.preventDefault();pendingQuery=document.getElementById('hs').value;location.hash='catalog';});
